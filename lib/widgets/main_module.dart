@@ -65,11 +65,11 @@ class MainModule extends StatelessWidget {
     return Container(
       color: const Color(0xFF988D97),
       padding: const EdgeInsets.all(12),
-      alignment: Alignment.center,
-
-      child: Center(child: Column(
-        children: rows,
-      ),),
+      child: SizedBox(
+        width: memory.width * 80,
+        height: memory.height * 80,
+        child: Column(children: rows,),
+      ),
     );
   }
 
