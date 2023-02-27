@@ -11,6 +11,9 @@ class Program {
   late Uint8List bytes;
   int get size => bytes.length;
 
+  Map<String, int> labels = <String, int>{};
+  Map<String, int> variables = <String, int>{};
+
   Program(int size) {
     bytes = Uint8List(size);
   }
@@ -32,6 +35,31 @@ class Program {
     return false;
   }
 
+  void addLabels(Map<String, int> labels) {
+    this.labels.addAll(labels);
+  }
+
+  void addLabel(String label, int offset) {
+    labels[label] = offset;
+  }
+
+  void addVariables(Map<String, int> variables) {
+    this.variables.addAll(variables);
+  }
+
+  void addVariable(String name, int index) {
+    variables[name] = index;
+  }
+
+  String? findVariable(int index) {
+    for (var entry in variables.entries) {
+      if (entry.value == index) {
+        return entry.key;
+      }
+    }
+    return null;
+  }
+
   List<Instruction> disassembly() {
     var instList = <Instruction>[];
     for (int index = 0; index < bytes.length;) {
@@ -47,18 +75,24 @@ class Program {
     return instList;
   }
 
-  static Program assembly(List<Instruction> instList, Map<String, int> symbols) {
+  static Program assembly(List<Instruction> instList, Map<String, int> variables) {
+    // 生成符号表
+    Map<String, int> symbols = <String, int>{};
+    symbols.addAll(variables);
+
     // 生成偏移
+    Map<String, int> labels = <String, int>{};
     int offset = 0;
     for (var inst in instList) {
       inst.offset = offset;
       if (inst.labels.isNotEmpty) {
         for (var label in inst.labels) {
-          symbols[label] = offset;
+          labels[label] = offset;
         }
       }
       offset += inst.opcode.length;
     }
+    symbols.addAll(labels);
 
     // 解析符号
     for (var inst in instList) {

@@ -1,0 +1,14 @@
+; 三倍扩大室
+; mem 3x1
+; 输入a，输出3*a
+
+macros:
+    .set input, 0
+
+start:
+    PLA
+    STA input
+    ADD input
+    ADD input
+    PHA
+    JMP start

@@ -1,0 +1,21 @@
+; 均衡之间
+; mem: 3x1
+; 每一组两个输入数据，如果相等，输出其中一个，不相等，不用输出
+
+macros:
+    .set tmp, 0
+
+start:
+    JMP input
+
+output:
+    LDA tmp
+    PHA
+
+input:
+    PLA
+    STA tmp
+    PLA
+    SUB tmp
+    BEQ output
+    JMP input

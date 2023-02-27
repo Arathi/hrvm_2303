@@ -1,0 +1,11 @@
+; 零扑灭行动
+; 添加了BEQ指令
+; mem: 3x3
+; 输出所有非0
+
+start:
+    PLA
+    BEQ start
+    PHA
+    JMP start
+

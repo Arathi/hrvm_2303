@@ -1,0 +1,59 @@
+macros:
+    .set zero, 24
+    .set index, 20
+    .set sorting, 21
+    .set temp, 22
+
+init:
+    LDA zero
+    STA index
+
+input:
+    PLA
+    STA [index]
+    BEQ sort_start
+    INC index   ; index++
+    JMP input   ; goto input
+
+sort_start:
+    LDA zero
+    STA sorting
+    STA index
+    INC index
+
+compare:
+    LDA [index]
+    BEQ sort_end  ; if (mem[index] == 0) goto sort_next
+    SUB [sorting] ; acc = mem[index] - mem[sorting]
+    BMI label     ; if (acc < 0) goto swap
+    INC index     ; index++
+    JMP compare   ; goto compare
+
+swap:
+    LDA [index]
+    STA tmp
+    LDA [sorting]
+    STA [index]
+    LDA tmp
+    STA [sorting]
+    INC index
+    JMP compare
+
+sort_next:
+    INC sorting   ; sorting++
+    LDA [sorting] ; if (mem[sorting] == 0) sort_end
+    BEQ sort_end
+    STA sorting
+    STA index     ; index = sorting + 1
+    INC index
+    JMP compare
+
+sort_end:
+    LDA zero
+    STA index
+output:
+    LDA [index]
+    BEQ init
+    PHA
+    INC index
+    JMP output

@@ -1,0 +1,13 @@
+; 增加了LDA/STA指令
+
+macros:
+    .set tmp, 0
+
+start:
+    PLA
+    STA tmp
+    PLA
+    PHA
+    LDA tmp
+    PHA
+    JMP start

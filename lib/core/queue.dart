@@ -1,7 +1,12 @@
+import 'processor.dart';
+
 class Queue {
   QueueType type;
   List<int> initValues = <int>[];
   List<int> values = <int>[];
+
+  static const int Code0 = 0x30;
+  static const int Code9 = 0x39;
 
   Queue(this.type, [List<dynamic>? initValues]) {
     if (initValues != null) {
@@ -11,8 +16,14 @@ class Queue {
         }
         else if (data is String) {
           for (var code in data.codeUnits) {
-            int value = code + 0x7F00;
-            this.initValues.add(value);
+            if (code >= Processor.CodeA && code <= Processor.CodeZ) {
+              int value = Processor.CharacterPrefix + code;
+              this.initValues.add(value);
+            }
+            else if (code >= Code0 && code <= Code9) {
+              int value = code - Code0;
+              this.initValues.add(value);
+            }
           }
         }
       }

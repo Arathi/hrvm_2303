@@ -1,0 +1,27 @@
+macros:
+    .set width, 15
+    .set zero, 14
+    .set x, 12
+    .set y, 13
+    .set t, 11
+
+input:
+    LDA zero
+    STA y    ; y = 0
+    PLA      ; acc = inbox()
+
+div:
+    STA x      ; x = acc
+    SUB width
+    STA t      ; t = acc = x - width
+    BMI output ; if (acc < 0) goto output
+    INC y      ; y++
+    LDA t      ; acc = t
+    JMP div    ; goto div
+
+output:
+    LDA x
+    PHA       ; outbox(x)
+    LDA y
+    PHA       ; outbox(y)
+    JMP input

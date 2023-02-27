@@ -1,0 +1,14 @@
+; 多雨之夏
+; 输入每组两个数，相加后输出
+; 增加了ADD指令
+
+macros:
+    .set tmp, 0
+
+start:
+    PLA
+    STA tmp
+    PLA
+    ADD tmp
+    PHA
+    JMP start

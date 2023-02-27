@@ -1,0 +1,5 @@
+; 只能用PLA、PHA和JMP指令
+start:
+    PLA
+    PHA
+    JMP start

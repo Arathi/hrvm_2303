@@ -1,0 +1,21 @@
+; 八倍扩大装置
+; mem: 5x1
+; 输入a，输出8a
+
+macros:
+    .set x1, 0
+    .set x2, 1
+    .set x4, 1
+    .set x8, 1
+    .set x16, 1
+
+start:
+    PLA
+    STA x1
+    ADD x1
+    STA x2
+    ADD x2
+    STA x4
+    ADD x4
+    PHA
+    JMP start

@@ -1,0 +1,14 @@
+; 零保护行动
+; 增加了BMI指令
+; 输出所有0
+
+start:
+    JMP input
+
+output:
+    PHA
+
+input:
+    PLA
+    BEQ output
+    JMP input

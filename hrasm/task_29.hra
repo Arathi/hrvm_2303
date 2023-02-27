@@ -1,0 +1,15 @@
+; 存储楼层
+; 增加了间接寻址
+; mem: 5x3
+; 其中0-9已经填充了字符 N K A E R D O L Y J
+; mem[12] = 8
+
+macros:
+    .set addr, 10
+
+start:
+    PLA
+    STA addr
+    LDA [addr]
+    PHA
+    JMP start

@@ -1,0 +1,15 @@
+macros:
+    .set ptr, 22
+
+start:
+    .ora 0
+    PLA
+    STA ptr   ; ptr = inbox()
+output:
+    LDA [ptr]
+    PHA       ; outbox()
+    INC ptr
+    LDA [ptr]
+    STA ptr   ; ptr = mem[ptr+1]
+    BMI start   ; if (ptr < 0) goto start
+    JMP output

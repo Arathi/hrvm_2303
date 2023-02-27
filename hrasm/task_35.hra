@@ -1,0 +1,37 @@
+macros:
+    .set length, 16
+    .set current, 17
+    .set index, 18
+    .set zero, 19
+
+init:
+    .org 0
+    LDA zero
+    STA length
+
+save_first:
+    PLA
+output:
+    STA [length]   mem[length] = inbox()
+    PHA            ; outbox()
+    INC length     ; length++
+
+exists:
+    LDA zero
+    STA index      ; index = 0
+save_current:
+    PLA
+    STA current    ; current = inbox()
+
+compare:
+    SUB [index]    ; if (acc == mem[index])
+    BEQ exists     ;     goto exists
+    INC index      ; index++
+    SUB length     ; if (index == length)
+    BEQ not_exists ;     goto not_exists
+    LDA current
+    JMP compare
+
+not_exists:
+    LDA current
+    JMP output

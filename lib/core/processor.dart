@@ -11,10 +11,10 @@ class Processor {
   static const int IntegerMin = -999;
   static const int IntegerMax = 999;
   static const int CharacterPrefix = 0x7F00;
-  static const int CharacterMin = CharacterPrefix + 0x41;
-  static const int CharacterMax = CharacterPrefix + 0x5A;
+  static const int CodeA = 0x41;
+  static const int CodeZ = 0x5A;
 
-  int? acc = 0;
+  int? acc;
   int pc = 0;
   ProcessorStatus status = ProcessorStatus.stop;
   Machine machine;
@@ -221,8 +221,11 @@ enum DataType {
   character,
   invalid;
 
-  static DataType parse(int data) {
-    if (data >= Processor.CharacterMin && data <= Processor.CharacterMax) {
+  static DataType parse(int? data) {
+    if (data == null) return invalid;
+
+    if (data >= Processor.CharacterPrefix + Processor.CodeA &&
+        data <= Processor.CharacterPrefix + Processor.CodeZ) {
       return character;
     }
     if (data >= Processor.IntegerMin && data <= Processor.IntegerMax) {

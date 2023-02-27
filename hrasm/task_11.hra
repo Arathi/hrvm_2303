@@ -1,0 +1,24 @@
+; 加运算走廊
+; mem: 3x1
+
+macros:
+    .set a, 1
+    .set b, 2
+
+start:
+    PLA
+    STA a
+    PLA
+    STA b
+
+sub_b_a:
+    SUB a
+    PHA
+
+sub_a_b:
+    LDA a
+    SUB b
+    PHA
+
+restart:
+    JMP start
