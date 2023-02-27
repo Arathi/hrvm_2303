@@ -1,0 +1,9 @@
+task:
+  level: 30
+  name: 串存储楼层
+  memory:
+    width: 5
+    height: 5
+    values: GET0T H0TAR 0AWAK E0IS0 XXX0
+  inbox:
+  outbox:

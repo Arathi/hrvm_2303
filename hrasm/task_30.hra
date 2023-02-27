@@ -1,0 +1,13 @@
+macros:
+    .set ptr, 24
+
+start:
+    PLA
+    STA ptr
+
+check_eos:
+    LDA [ptr]
+    BEQ start
+    PHA
+    INC ptr
+    JMP check_eos
