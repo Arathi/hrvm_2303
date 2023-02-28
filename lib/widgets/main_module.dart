@@ -7,6 +7,8 @@ import '../core/program.dart';
 import 'data_module.dart';
 
 class MainModule extends StatelessWidget {
+  final MachineAppController c = Get.find();
+
   Widget buildMemoryCell(int x, int y, int index, int? data, String? variableName) {
     var stacks = <Widget>[];
     Color? bgColor;
@@ -75,24 +77,19 @@ class MainModule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final MachineAppController controller = Get.find();
-    final processor = controller.machine.processor;
-    final memory = controller.machine.memory;
-    final program = controller.machine.program;
-
     return Container(
       color: const Color(0xFFEAA977),
       child: Column(
         children: [
           const SizedBox(height: 16),
           Center(
-              child: DataModule(processor.acc)
+              child: Obx( () => DataModule(c.processor.acc) )
           ),
           const SizedBox(height: 16),
           Expanded(
               child: Center(child: buildMemory(
-                  memory,
-                  program
+                  c.memory,
+                  c.program
               ))
           )
         ],

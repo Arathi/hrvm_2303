@@ -34,13 +34,30 @@ class MachineAppController extends GetxController {
     ], {
       "a": 0
     })
-  ).obs();
+  ).obs;
+
+  get processor => machine.value.processor;
+  get memory => machine.value.memory;
+  get inbox => machine.value.inbox;
+  get outbox => machine.value.outbox;
+  get program => machine.value.program;
+
+  void step() {
+    machine.value.step();
+    // update();
+  }
 }
 
 class MachinePage extends StatelessWidget {
-  const MachinePage({super.key});
+  MachinePage({super.key});
 
-  Widget buildQueue(Queue queue) {
+  final MachineAppController c = Get.find();
+
+  Widget buildQueue(QueueType type) {
+    final Queue queue = (type == QueueType.inbox) ?
+        c.machine.value.inbox :
+        c.machine.value.outbox;
+
     var title = (queue.type == QueueType.inbox) ? "INBOX" : "OUTBOX";
     var widgets = <Widget>[];
     widgets.add(const SizedBox(width: 64, height: 10));
@@ -50,6 +67,7 @@ class MachinePage extends StatelessWidget {
     for (var value in values) {
       widgets.add(DataModule(value));
     }
+
     return Container(
       color: const Color(0xFF4C392E),
       child: Column(
@@ -64,20 +82,19 @@ class MachinePage extends StatelessWidget {
       color: const Color(0xFFBB9F8B),
       child: Column(children: [
         ElevatedButton(onPressed: () {
-          log.info("按下单步按钮");
-          controller.machine.step();
+          // log.info("按下单步按钮");
+          controller.step();
         }, child: Text("单步"),)
       ],),
     );
   }
 
   Widget buildBody() {
-    final MachineAppController controller = Get.find();
     return Row(
       children: [
-        buildQueue(controller.machine.inbox),
+        Obx(() => buildQueue(QueueType.inbox)),
         Expanded(flex: 4, child: MainModule()),
-        buildQueue(controller.machine.outbox),
+        Obx(() => buildQueue(QueueType.outbox)),
         Expanded(flex: 3, child: buildDebugger()),
       ],
     );
@@ -85,7 +102,6 @@ class MachinePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final MachineAppController controller = Get.put(MachineAppController());
     return Scaffold(
         body: buildBody()
     );
@@ -97,7 +113,8 @@ class MachineApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const GetMaterialApp(
+    final MachineAppController controller = Get.put(MachineAppController());
+    return GetMaterialApp(
       home: MachinePage()
     );
   }

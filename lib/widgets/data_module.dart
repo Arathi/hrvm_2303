@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import '../core/processor.dart';
 
 class DataModule extends StatelessWidget {
-  int? data;
+  final int? data;
 
   static const Color colorIntegerUpper = Color(0xFFA0CB5F);
   static const Color colorIntegerLower = Color(0xFF4E6036);
   static const Color colorCharacterUpper = Color(0xFF8C8DC1);
   static const Color colorCharacterLower = Color(0xFF43445E);
 
-  DataModule(this.data, {super.key});
+  const DataModule(this.data, {super.key});
 
   @override
   Widget build(BuildContext context) {
