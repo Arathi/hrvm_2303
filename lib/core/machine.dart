@@ -15,6 +15,8 @@ class Machine {
   Program program;
   late Processor processor;
 
+  int counter = 0;
+
   Machine(this.inbox, this.outbox, this.memory, this.program) {
     processor = Processor(this);
   }
@@ -36,7 +38,7 @@ class Machine {
   }
 
   int execute() {
-    int counter = 0;
+    counter = 0;
     bool next = true;
     do {
       next = processor.step();
@@ -44,6 +46,10 @@ class Machine {
     }
     while (next);
     return counter;
+  }
+
+  bool step() {
+    return processor.step(true);
   }
 
   Instruction? getInstruction(int pc) {

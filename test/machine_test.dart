@@ -5,6 +5,9 @@ import 'package:hrvm/core/memory.dart';
 import 'package:hrvm/core/program.dart';
 import 'package:hrvm/core/queue.dart';
 import 'package:hrvm/core/opcode.dart';
+import 'package:logging/logging.dart';
+
+var log = Logger("machine-test");
 
 void main() {
   test("test-run", () {
@@ -28,11 +31,10 @@ void main() {
           "b": 1
         }),
     );
-    // List<Instruction> instList = machine.program.disassembly();
-    print("machine created.");
+    log.info("machine created.");
 
-    print("machine startup.");
+    log.info("machine startup.");
     machine.execute();
-    print("machine stopped.");
+    log.info("machine stopped.");
   });
 }

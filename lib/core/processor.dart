@@ -16,12 +16,16 @@ class Processor {
 
   int? acc;
   int pc = 0;
-  ProcessorStatus status = ProcessorStatus.stop;
+  ProcessorStatus status = ProcessorStatus.pending;
   Machine machine;
 
   Processor(this.machine);
 
   bool step([bool pause = false]) {
+    if (status == ProcessorStatus.stop || status == ProcessorStatus.exception) {
+      return false;
+    }
+
     var inst = machine.getInstruction(pc);
 
     try {
@@ -46,6 +50,7 @@ class Processor {
             log.info("输入队列已清空，程序运行结束");
             return false;
           }
+          log.info("A = inbox() // A = $acc");
           break;
 
         case Opcode.PHA:
@@ -55,6 +60,7 @@ class Processor {
             throw RuntimeException(inst, "累加器中没有值，无法执行PHA");
           }
           machine.pushToOutbox(acc!);
+          log.info("outbox(A); A = null // A = $acc");
           acc = null;
           break;
 
@@ -89,6 +95,7 @@ class Processor {
           break;
 
         case Opcode.JMP:
+          log.info("goto offset_${inst.operand}");
           pc = inst.operand;
           break;
 
@@ -97,6 +104,7 @@ class Processor {
             // exception = "空值！你不能两手空空的去执行JUMP IF ZERO！";
             throw RuntimeException(inst, "累加器中没有值，无法执行BEQ");
           }
+          log.info("if (A == 0) goto offset_${pc+inst.operand} // A = $acc");
           if (acc == 0) {
             pc += inst.operand;
           }
@@ -108,6 +116,7 @@ class Processor {
             // exception = "空值！你不能两手空空的去执行JUMP IF NEGATIVE！";
             throw RuntimeException(inst, "累加器中没有值，无法执行BMI");
           }
+          log.info("if (A < 0) goto offset_${pc+inst.operand} // A = $acc");
           if (acc! < 0) {
             pc += inst.operand;
           }
@@ -147,11 +156,13 @@ class Processor {
   void lda(int operand, bool indirect) {
     var data = readMemory(operand, indirect);
     acc = data;
+    log.info("A = memory[$operand, $indirect] // A = $acc");
   }
 
   void sta(int operand, bool indirect) {
     if (acc == null) throw RuntimeException(null, "累加器中没有值，无法执行STA");
     writeMemory(operand, acc!, indirect);
+    log.info("memory[$operand, $indirect] = A // A = $acc");
   }
 
   void add(int operand, bool indirect) {
@@ -169,6 +180,7 @@ class Processor {
     }
 
     acc = acc! + data;
+    log.info("A += memory[$operand, $indirect] // A = $acc");
   }
 
   void sub(int operand, bool indirect) {
@@ -182,6 +194,7 @@ class Processor {
     }
 
     acc = acc! - data;
+    log.info("A -= memory[$operand, $indirect] // A = $acc");
   }
 
   void inc(int operand, bool indirect) {
@@ -194,6 +207,7 @@ class Processor {
     data++;
     writeMemory(operand, data, indirect);
     acc = data;
+    log.info("A = ++memory[$operand, $indirect] // A = $acc");
   }
 
   void dec(int operand, bool indirect) {
@@ -206,10 +220,12 @@ class Processor {
     data--;
     writeMemory(operand, data, indirect);
     acc = data;
+    log.info("A = --memory[$operand, $indirect] // A = $acc");
   }
 }
 
 enum ProcessorStatus {
+  pending,
   stop,
   running,
   paused,

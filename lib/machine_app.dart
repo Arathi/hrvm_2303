@@ -1,14 +1,18 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hrvm/widgets/data_module.dart';
-import 'package:hrvm/widgets/main_module.dart';
+import 'package:hrvm/core/instruction.dart';
+import 'package:hrvm/core/opcode.dart';
+import 'package:logging/logging.dart';
 
-import 'core/processor.dart';
+import 'widgets/data_module.dart';
+import 'widgets/main_module.dart';
 import 'core/queue.dart';
 import 'core/machine.dart';
 import 'core/memory.dart';
 import 'core/program.dart';
+
+var log = Logger("MachineApp");
 
 class MachineAppController extends GetxController {
   var machine = Machine(
@@ -17,7 +21,19 @@ class MachineAppController extends GetxController {
     Memory(4, 4, {
       15: 0
     }),
-    Program(128)
+    Program.assembly([
+      Instruction(Opcode.PLA, label: "start"),
+      Instruction(Opcode.STA_ABS, operandName: "a"),
+      Instruction(Opcode.PLA),
+      Instruction(Opcode.SUB_ABS, operandName: "a"),
+      Instruction(Opcode.BEQ, operandName: "output"),
+      Instruction(Opcode.JMP, operandName: "start"),
+      Instruction(Opcode.LDA_ABS, operandName: "a", label: "output"),
+      Instruction(Opcode.PHA),
+      Instruction(Opcode.JMP, operandName: "start"),
+    ], {
+      "a": 0
+    })
   ).obs();
 }
 
@@ -43,8 +59,15 @@ class MachinePage extends StatelessWidget {
   }
 
   Widget buildDebugger() {
+    final MachineAppController controller = Get.find();
     return Container(
       color: const Color(0xFFBB9F8B),
+      child: Column(children: [
+        ElevatedButton(onPressed: () {
+          log.info("按下单步按钮");
+          controller.machine.step();
+        }, child: Text("单步"),)
+      ],),
     );
   }
 
