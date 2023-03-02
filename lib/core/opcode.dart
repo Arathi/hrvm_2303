@@ -1,6 +1,6 @@
-import 'package:logging/logging.dart';
+import 'package:logger/logger.dart';
 
-final log = Logger("Opcode");
+final log = Logger();
 
 enum Opcode {
   BRK(0x00, "BRK", AddressingMode.implied, 1),
@@ -57,7 +57,7 @@ enum Opcode {
     }
 
     if (opcodes.isEmpty) {
-      log.warning("未找到助记符为 $mnemonic 的指令");
+      log.w("未找到助记符为 $mnemonic 的指令");
       return null;
     }
 
@@ -65,7 +65,7 @@ enum Opcode {
       if (opcodes.length == 1) {
         return opcodes[0];
       }
-      log.warning("找到 ${opcodes.length} 个助记符为 $mnemonic 的指令");
+      log.w("找到 ${opcodes.length} 个助记符为 $mnemonic 的指令");
       return null;
     }
 
@@ -75,7 +75,7 @@ enum Opcode {
       }
     }
 
-    log.warning("未找到助记符为 $mnemonic 且 寻址方式为 ${addrMode.description} 指令");
+    log.w("未找到助记符为 $mnemonic 且 寻址方式为 ${addrMode.description} 指令");
     return null;
   }
 }

@@ -1,11 +1,9 @@
-import 'dart:ffi';
 import 'dart:typed_data';
-
-import 'package:logging/logging.dart';
+import 'package:logger/logger.dart';
 
 import 'opcode.dart';
 
-var log = Logger("Instruction");
+var log = Logger();
 
 class Instruction {
   Opcode opcode;
@@ -78,7 +76,7 @@ class Instruction {
         }
         return inst;
       }
-      log.warning("未获取到操作数，无法创建指令");
+      log.w("未获取到操作数，无法创建指令");
     }
     return null;
   }

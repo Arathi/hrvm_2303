@@ -1,11 +1,11 @@
+import 'package:hrvm/core/instruction.dart';
 import 'package:hrvm/core/opcode.dart';
 import 'package:hrvm/core/runtime_exception.dart';
-import 'package:logging/logging.dart';
+import 'package:logger/logger.dart';
 
-import 'instruction.dart';
 import 'machine.dart';
 
-var log = Logger("Processor");
+var log = Logger();
 
 class Processor {
   static const int IntegerMin = -999;
@@ -17,9 +17,28 @@ class Processor {
   int? acc;
   int pc = 0;
   ProcessorStatus status = ProcessorStatus.pending;
-  Machine machine;
+  final Machine machine;
 
   Processor(this.machine);
+
+  void reset() {
+    acc = null;
+    pc = 0;
+    status = ProcessorStatus.pending;
+  }
+
+  get accValue {
+    var type = DataType.parse(acc);
+    switch (type) {
+      case DataType.integer:
+        return "$acc";
+      case DataType.character:
+        var charCode = acc! - CharacterPrefix;
+        return "'${String.fromCharCode(charCode)}'";
+      default:
+        return "null";
+    }
+  }
 
   bool step([bool pause = false]) {
     if (status == ProcessorStatus.stop || status == ProcessorStatus.exception) {
@@ -27,12 +46,16 @@ class Processor {
     }
 
     var inst = machine.getInstruction(pc);
+    if (inst == null) {
+      status = ProcessorStatus.stop;
+      return false;
+    }
 
+    return executeInstruction(inst, pause);
+  }
+
+  bool executeInstruction(Instruction inst, [bool pause = false]) {
     try {
-      if (inst == null) {
-        status = ProcessorStatus.stop;
-        return false;
-      }
       pc += inst.opcode.length;
       status = ProcessorStatus.running;
 
@@ -44,24 +67,14 @@ class Processor {
           break;
 
         case Opcode.PLA:
-          acc = machine.popFromInbox();
-          if (acc == null) {
-            status = ProcessorStatus.stop;
-            log.info("输入队列已清空，程序运行结束");
+          pla();
+          if (status == ProcessorStatus.stop) {
             return false;
           }
-          log.info("A = inbox() // A = $acc");
           break;
 
         case Opcode.PHA:
-          if (acc == null) {
-            status = ProcessorStatus.exception;
-            // exception = "空值！你不能两手空空的去执行OUTBOX！";
-            throw RuntimeException(inst, "累加器中没有值，无法执行PHA");
-          }
-          machine.pushToOutbox(acc!);
-          log.info("outbox(A); A = null // A = $acc");
-          acc = null;
+          pha();
           break;
 
         case Opcode.LDA_ABS:
@@ -95,8 +108,7 @@ class Processor {
           break;
 
         case Opcode.JMP:
-          log.info("goto offset_${inst.operand}");
-          pc = inst.operand;
+          jmp(inst.operand);
           break;
 
         case Opcode.BEQ:
@@ -104,7 +116,7 @@ class Processor {
             // exception = "空值！你不能两手空空的去执行JUMP IF ZERO！";
             throw RuntimeException(inst, "累加器中没有值，无法执行BEQ");
           }
-          log.info("if (A == 0) goto offset_${pc+inst.operand} // A = $acc");
+          log.i("if (A == 0) goto offset_${pc+inst.operand} // A = $accValue");
           if (acc == 0) {
             pc += inst.operand;
           }
@@ -116,20 +128,23 @@ class Processor {
             // exception = "空值！你不能两手空空的去执行JUMP IF NEGATIVE！";
             throw RuntimeException(inst, "累加器中没有值，无法执行BMI");
           }
-          log.info("if (A < 0) goto offset_${pc+inst.operand} // A = $acc");
+          log.i("if (A < 0) goto offset_${pc+inst.operand} // A = $accValue");
           if (acc! < 0) {
             pc += inst.operand;
           }
           break;
       }
     }
-    on RuntimeException {
+    on RuntimeException catch(ex) {
       status = ProcessorStatus.exception;
+      if (ex.instruction == null) {
+        throw RuntimeException(inst, ex.message);
+      }
       rethrow;
     }
     on Exception catch (ex) {
       status = ProcessorStatus.exception;
-      throw RuntimeException(inst);
+      throw RuntimeException(inst, "执行指令时出现其他异常：${ex.toString()}");
     }
 
     if (pause) {
@@ -153,16 +168,36 @@ class Processor {
     return machine.write(address, data);
   }
 
+  void pla() {
+    acc = machine.popFromInbox();
+    if (acc == null) {
+      status = ProcessorStatus.stop;
+      log.i("输入队列已清空，程序运行结束");
+    }
+    log.i("A = inbox() // A = $accValue");
+  }
+
+  void pha() {
+    if (acc == null) {
+      status = ProcessorStatus.exception;
+      // exception = "空值！你不能两手空空的去执行OUTBOX！";
+      throw RuntimeException(null, "累加器中没有值，无法执行PHA");
+    }
+    machine.pushToOutbox(acc!);
+    log.i("outbox(A); A = null // A = $accValue");
+    acc = null;
+  }
+
   void lda(int operand, bool indirect) {
     var data = readMemory(operand, indirect);
     acc = data;
-    log.info("A = memory[$operand, $indirect] // A = $acc");
+    log.i("A = memory[$operand, $indirect] // A = $accValue");
   }
 
   void sta(int operand, bool indirect) {
     if (acc == null) throw RuntimeException(null, "累加器中没有值，无法执行STA");
     writeMemory(operand, acc!, indirect);
-    log.info("memory[$operand, $indirect] = A // A = $acc");
+    log.i("memory[$operand, $indirect] = A // A = $accValue");
   }
 
   void add(int operand, bool indirect) {
@@ -180,7 +215,7 @@ class Processor {
     }
 
     acc = acc! + data;
-    log.info("A += memory[$operand, $indirect] // A = $acc");
+    log.i("A += memory[$operand, $indirect] // A = $accValue");
   }
 
   void sub(int operand, bool indirect) {
@@ -194,7 +229,7 @@ class Processor {
     }
 
     acc = acc! - data;
-    log.info("A -= memory[$operand, $indirect] // A = $acc");
+    log.i("A -= memory[$operand, $indirect] // A = $accValue");
   }
 
   void inc(int operand, bool indirect) {
@@ -207,7 +242,7 @@ class Processor {
     data++;
     writeMemory(operand, data, indirect);
     acc = data;
-    log.info("A = ++memory[$operand, $indirect] // A = $acc");
+    log.i("A = ++memory[$operand, $indirect] // A = $accValue");
   }
 
   void dec(int operand, bool indirect) {
@@ -220,7 +255,35 @@ class Processor {
     data--;
     writeMemory(operand, data, indirect);
     acc = data;
-    log.info("A = --memory[$operand, $indirect] // A = $acc");
+    log.i("A = --memory[$operand, $indirect] // A = $accValue");
+  }
+
+  void jmp(int operand) {
+    log.i("goto offset_$operand");
+    pc = operand;
+  }
+
+  void beq(int operand) {
+    if (acc == null) {
+      // exception = "空值！你不能两手空空的去执行JUMP IF ZERO！";
+      throw RuntimeException(null, "累加器中没有值，无法执行BEQ");
+    }
+    log.i("if (A == 0) goto offset_${pc + operand} // A = $accValue");
+    if (acc == 0) {
+      pc += operand;
+    }
+  }
+
+  void bmi(int operand) {
+    if (acc == null) {
+      status = ProcessorStatus.exception;
+      // exception = "空值！你不能两手空空的去执行JUMP IF NEGATIVE！";
+      throw RuntimeException(null, "累加器中没有值，无法执行BMI");
+    }
+    log.i("if (A < 0) goto offset_${pc + operand} // A = $accValue");
+    if (acc! < 0) {
+      pc += operand;
+    }
   }
 }
 

@@ -11,6 +11,11 @@ class DataModule extends StatelessWidget {
   static const Color colorCharacterUpper = Color(0xFF8C8DC1);
   static const Color colorCharacterLower = Color(0xFF43445E);
 
+  static const width = 36.0;
+  static const upperHeight = width;
+  static const lowerHeight = 6.0;
+  static const spaceHeight = 10.0;
+
   const DataModule(this.data, {super.key});
 
   @override
@@ -35,8 +40,8 @@ class DataModule extends StatelessWidget {
 
     return Column(children: [
       SizedBox(
-          width: 36,
-          height: 36,
+          width: width,
+          height: upperHeight,
           child: Container(
             color: colorUpper,
             child: Center(child: Text(
@@ -49,15 +54,15 @@ class DataModule extends StatelessWidget {
           )
       ),
       SizedBox(
-          width: 36,
-          height: 6,
+          width: width,
+          height: lowerHeight,
           child: Container(
               color: colorLower
           )
       ),
       const SizedBox(
-        width: 36,
-        height: 10,
+        width: width,
+        height: spaceHeight,
       )
     ]);
   }

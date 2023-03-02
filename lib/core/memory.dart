@@ -1,15 +1,12 @@
-import 'package:hrvm/core/opcode.dart';
-import 'package:logging/logging.dart';
+import 'package:logger/logger.dart';
 
-import 'instruction.dart';
-
-var log = Logger("Memory");
+var log = Logger();
 
 class Memory {
   int width;
   int height;
   Map<int, int> initValues = {};
-  List<int?> values = [];
+  List<int?> values = <int?>[];
 
   int get size {
     return width * height;
@@ -29,7 +26,7 @@ class Memory {
     if (index >= 0 && index < size) {
       return values[index];
     }
-    log.warning("内存越界：size=$size index=$index");
+    log.w("内存越界：size=$size index=$index");
     return null;
   }
 
@@ -38,7 +35,7 @@ class Memory {
       values[index] = data;
       return true;
     }
-    log.warning("内存越界：size=$size index=$index");
+    log.w("内存越界：size=$size index=$index");
     return false;
   }
 

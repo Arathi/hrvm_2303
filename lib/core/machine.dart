@@ -1,4 +1,4 @@
-import 'package:logging/logging.dart';
+import 'package:logger/logger.dart';
 
 import 'queue.dart';
 import 'memory.dart';
@@ -6,7 +6,7 @@ import 'program.dart';
 import 'processor.dart';
 import 'instruction.dart';
 
-var log = Logger("Machine");
+var log = Logger();
 
 class Machine {
   Queue inbox;
@@ -19,6 +19,13 @@ class Machine {
 
   Machine(this.inbox, this.outbox, this.memory, this.program) {
     processor = Processor(this);
+  }
+
+  void reset() {
+    inbox.reset();
+    outbox.reset();
+    memory.reset();
+    processor.reset();
   }
 
   int? read(int address) {

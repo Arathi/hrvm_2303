@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 
-import 'package:logging/logging.dart';
+import 'package:logger/logger.dart';
 
 import 'instruction.dart';
 import 'opcode.dart';
 
-var log = Logger("Program");
+var log = Logger();
 
 class Program {
   late Uint8List bytes;
@@ -14,7 +14,7 @@ class Program {
   Map<String, int> labels = <String, int>{};
   Map<String, int> variables = <String, int>{};
 
-  Program(int size) {
+  Program([int size = 256]) {
     bytes = Uint8List(size);
   }
 
@@ -22,7 +22,7 @@ class Program {
     if (index >= 0 && index < size) {
       return bytes[index];
     }
-    log.warning("内存越界：size=$size index=$index");
+    log.w("内存越界：size=$size index=$index");
     return null;
   }
 
@@ -31,7 +31,7 @@ class Program {
       bytes[index] = data;
       return true;
     }
-    log.warning("内存越界：size=$size index=$index");
+    log.w("内存越界：size=$size index=$index");
     return false;
   }
 
@@ -99,7 +99,7 @@ class Program {
       if (inst.operandName != null) {
         var symbol = inst.operandName;
         if (!symbols.containsKey(symbol)) {
-          log.warning("未找到符号：$symbol");
+          log.w("未找到符号：$symbol");
           continue;
         }
         var value = symbols[symbol] as int;

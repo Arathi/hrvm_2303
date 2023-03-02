@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrvm/core/instruction.dart';
 import 'package:hrvm/core/opcode.dart';
-import 'package:logging/logging.dart';
+import 'package:hrvm/widgets/queue_module.dart';
+import 'package:logger/logger.dart';
 
 import 'widgets/data_module.dart';
 import 'widgets/main_module.dart';
@@ -12,7 +13,7 @@ import 'core/machine.dart';
 import 'core/memory.dart';
 import 'core/program.dart';
 
-var log = Logger("MachineApp");
+var log = Logger();
 
 class MachineAppController extends GetxController {
   var machine = Machine(
@@ -53,36 +54,12 @@ class MachinePage extends StatelessWidget {
 
   final MachineAppController c = Get.find();
 
-  Widget buildQueue(QueueType type) {
-    final Queue queue = (type == QueueType.inbox) ?
-        c.machine.value.inbox :
-        c.machine.value.outbox;
-
-    var title = (queue.type == QueueType.inbox) ? "INBOX" : "OUTBOX";
-    var widgets = <Widget>[];
-    widgets.add(const SizedBox(width: 64, height: 10));
-    widgets.add(Text(title));
-    widgets.add(const SizedBox(width: 64, height: 10));
-    var values = (queue.type == QueueType.inbox) ? queue.values : queue.values.reversed;
-    for (var value in values) {
-      widgets.add(DataModule(value));
-    }
-
-    return Container(
-      color: const Color(0xFF4C392E),
-      child: Column(
-        children: widgets,
-      )
-    );
-  }
-
   Widget buildDebugger() {
     final MachineAppController controller = Get.find();
     return Container(
       color: const Color(0xFFBB9F8B),
       child: Column(children: [
         ElevatedButton(onPressed: () {
-          // log.info("按下单步按钮");
           controller.step();
         }, child: Text("单步"),)
       ],),
@@ -92,9 +69,9 @@ class MachinePage extends StatelessWidget {
   Widget buildBody() {
     return Row(
       children: [
-        Obx(() => buildQueue(QueueType.inbox)),
+        Obx(() => QueueModule(c.inbox.type, c.inbox.values)),
         Expanded(flex: 4, child: MainModule()),
-        Obx(() => buildQueue(QueueType.outbox)),
+        Obx(() => QueueModule(c.outbox.type, c.outbox.values)),
         Expanded(flex: 3, child: buildDebugger()),
       ],
     );
