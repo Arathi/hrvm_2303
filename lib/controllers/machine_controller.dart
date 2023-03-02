@@ -1,32 +1,51 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrvm/core/instruction.dart';
+import 'package:logger/logger.dart';
 
 import '../core/opcode.dart';
 import '../core/program.dart';
 import '../core/queue.dart';
 import '../core/machine.dart';
 import '../core/memory.dart';
+import '../core/task.dart';
+
+var log = Logger();
 
 class MachineController extends GetxController {
   RxList<int> inboxValues = <int>[].obs;
   RxList<int> outboxValues = <int>[].obs;
   RxList<int?> memoryValues = <int?>[].obs;
-  // late Rx<Program> programInst;
-  var operandController = TextEditingController(text: "0");
 
+  RxList<Instruction> instList = <Instruction>[].obs;
+  RxMap<String, int> variables = <String, int>{}.obs;
+
+  var operandController = TextEditingController(text: "0");
+  // var tabController = TabController(length: 10, vsync: TickerProvider.)
+
+  late RxInt pc;
   late Rx<int?> acc;
+  late RxBool useIndirectAddressing = false.obs;
+  AddressingMode addrMode = AddressingMode.absolute;
 
   late Machine machine;
-
   get processor => machine.processor;
+  get program => machine.program;
 
-  MachineController() {
-    var inbox = Queue(QueueType.inbox, ["74HC161"]);
-    var outbox = Queue(QueueType.outbox);
-    var memory = Memory(4, 4, {
-      15: 0
-    });
+  MachineController([Task? task]) {
+    var inbox = (task != null) ?
+      Queue(QueueType.inbox, task.inboxInitValues) :
+      Queue(QueueType.inbox) ;
+
+    var outbox = (task != null) ?
+      Queue(QueueType.inbox, task.outboxInitValues) :
+      Queue(QueueType.outbox) ;
+
+    var memory = (task != null) ?
+      Memory(task.memoryWidth, task.memoryHeight, task.memoryInitValues) :
+      Memory(4, 4);
+
     var program = Program();
 
     machine = Machine(
@@ -37,14 +56,8 @@ class MachineController extends GetxController {
     );
 
     acc = machine.processor.acc.obs;
+    pc = machine.processor.pc.obs;
     updateObservers();
-  }
-
-  void bindingObservers() {
-    inboxValues = machine.inbox.values.obs;
-    outboxValues = machine.outbox.values.obs;
-    memoryValues = machine.memory.values.obs;
-    acc = machine.processor.acc.obs;
   }
 
   void updateObservers() {
@@ -57,8 +70,24 @@ class MachineController extends GetxController {
     memoryValues.clear();
     memoryValues.addAll(machine.memory.values);
 
-    acc.value = machine.processor.acc;
-    // update();
+    acc.value = processor.acc;
+    pc.value = processor.pc;
+  }
+
+  void addrModeChanged(bool value) {
+    log.i("寻址模式改动：相对寻址=$value");
+    useIndirectAddressing.value = value;
+    if (useIndirectAddressing.value) {
+      addrMode = AddressingMode.indirect;
+    }
+    else {
+      addrMode = AddressingMode.absolute;
+    }
+  }
+
+  void reloadProgram() {
+    instList.clear();
+    instList.addAll(program.disassembly());
   }
 
   void pla() {
@@ -79,37 +108,55 @@ class MachineController extends GetxController {
 
   void lda() {
     var addr = getOperandAsInt();
-    var inst = Instruction(Opcode.LDA_ABS, operand: addr);
+    var opcode = (addrMode == AddressingMode.absolute) ?
+        Opcode.LDA_ABS :
+        Opcode.LDA_IND ;
+    var inst = Instruction(opcode, operand: addr);
     execute(inst);
   }
 
   void sta() {
     var addr = getOperandAsInt();
-    var inst = Instruction(Opcode.STA_ABS, operand: addr);
+    var opcode = (addrMode == AddressingMode.absolute) ?
+        Opcode.STA_ABS :
+        Opcode.STA_IND ;
+    var inst = Instruction(opcode, operand: addr);
     execute(inst);
   }
 
   void add() {
     var addr = getOperandAsInt();
-    var inst = Instruction(Opcode.ADD_ABS, operand: addr);
+    var opcode = (addrMode == AddressingMode.absolute) ?
+        Opcode.ADD_ABS :
+        Opcode.ADD_IND ;
+    var inst = Instruction(opcode, operand: addr);
     execute(inst);
   }
 
   void sub() {
     var addr = getOperandAsInt();
-    var inst = Instruction(Opcode.SUB_ABS, operand: addr);
+    var opcode = (addrMode == AddressingMode.absolute) ?
+        Opcode.SUB_ABS :
+        Opcode.SUB_IND ;
+    var inst = Instruction(opcode, operand: addr);
     execute(inst);
   }
 
   void inc() {
     var addr = getOperandAsInt();
-    var inst = Instruction(Opcode.INC_ABS, operand: addr);
+    var opcode = (addrMode == AddressingMode.absolute) ?
+        Opcode.INC_ABS :
+        Opcode.INC_IND ;
+    var inst = Instruction(opcode, operand: addr);
     execute(inst);
   }
 
   void dec() {
     var addr = getOperandAsInt();
-    var inst = Instruction(Opcode.DEC_ABS, operand: addr);
+    var opcode = (addrMode == AddressingMode.absolute) ?
+        Opcode.DEC_ABS :
+        Opcode.DEC_IND ;
+    var inst = Instruction(opcode, operand: addr);
     execute(inst);
   }
 
@@ -128,3 +175,4 @@ class MachineController extends GetxController {
     operandController.dispose();
   }
 }
+

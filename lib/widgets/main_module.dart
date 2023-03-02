@@ -1,13 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
-import '../../machine_app.dart';
 import '../core/memory.dart';
 import '../core/program.dart';
 import 'data_module.dart';
 
-class MainModule extends StatelessWidget {
-  final MachineAppController c = Get.find();
+abstract class MainModule extends StatelessWidget {
+  const MainModule({super.key});
 
   Widget buildMemoryCell(int x, int y, int index, int? data, String? variableName) {
     var stacks = <Widget>[];
@@ -20,7 +19,7 @@ class MainModule extends StatelessWidget {
       SizedBox(
         width: 80,
         height: 80,
-        child: Container(color: bgColor,),
+        child: Container(color: bgColor),
       ),
     );
 
@@ -83,15 +82,12 @@ class MainModule extends StatelessWidget {
         children: [
           const SizedBox(height: 16),
           Center(
-              child: Obx( () => DataModule(c.processor.acc) )
+              child: Obx( () => DataModule(null) )
           ),
           const SizedBox(height: 16),
-          Expanded(
-              child: Center(child: buildMemory(
-                  c.memory,
-                  c.program
-              ))
-          )
+          // Expanded(
+          //     child: Center(child: buildMemory())
+          // )
         ],
       ),
     );

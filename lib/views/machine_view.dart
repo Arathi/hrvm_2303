@@ -1,9 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrvm/widgets/data_module.dart';
 import 'package:logger/logger.dart';
 
 import '../controllers/machine_controller.dart';
+import '../core/instruction.dart';
 
 var log = Logger();
 
@@ -12,26 +15,12 @@ class MachineView extends GetView<MachineController> {
 
   static const cellSize = 80.0;
 
+  final List<Tab> tabs = const <Tab>[
+    Tab(text: "源码"),
+    Tab(text: "可视化"),
+  ];
+
   Widget buildQueue(String title, RxList<int> values, [reversed = false]) {
-    // return ObxValue((list) {
-    //   var dataModules = <Widget>[];
-    //   for (var data in list) {
-    //     dataModules.add(DataModule(data));
-    //   }
-    //   if (reversed) {
-    //     dataModules = dataModules.reversed.toList();
-    //   }
-    //   return Container(
-    //     color: const Color(0xFF4C392E),
-    //       child: Column(children: [
-    //         SizedBox(width: 80, height: 40, child: Center(child: Text(title))),
-    //         Column(children: dataModules)
-    //   ],)
-    //   );
-    // }, values);
-    // return Obx(() {
-    //
-    // });
     return Container(
         color: const Color(0xFF4C392E),
         child: Column(children: [
@@ -123,73 +112,122 @@ class MachineView extends GetView<MachineController> {
     }, values);
   }
 
-  Widget buildDebugger() {
-    return Column(children: [
-      TextField(
-        autofocus: true,
-        decoration: const InputDecoration(
-          label: Text("operand"),
-          hintText: "操作数"
+  Widget buildInstBuilder() {
+    return SizedBox(width: 96, child: Container(
+      color: const Color(0xFF826852),
+      child: Column(children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          child: TextField(
+              autofocus: true,
+              decoration: const InputDecoration(
+                  label: Text("operand"),
+                  hintText: "操作数"
+              ),
+              controller: controller.operandController
+          ),
         ),
-        controller: controller.operandController
-      ),
-      const SizedBox(height: 25,),
+        const SizedBox(height: 10,),
 
-      ElevatedButton(onPressed: () {
-        log.i("Reset!");
-        controller.reset();
-      }, child: const Text("RST")),
-      const SizedBox(height: 25,),
+        Obx(() => Switch(
+            value: controller.useIndirectAddressing.value,
+            onChanged: controller.addrModeChanged
+        )),
+        const SizedBox(height: 25,),
 
-      ElevatedButton(onPressed: () {
-        log.i("PLA");
-        controller.pla();
-      }, child: const Text("PLA")),
-      const SizedBox(height: 10,),
+        ElevatedButton(onPressed: () {
+          log.i("Reset!");
+          controller.reset();
+        }, child: const Text("RST")),
+        const SizedBox(height: 25,),
 
-      ElevatedButton(onPressed: () {
-        log.i("PHA");
-        controller.pha();
-      }, child: const Text("PHA")),
-      const SizedBox(height: 25,),
+        ElevatedButton(onPressed: () {
+          log.i("PLA");
+          controller.pla();
+        }, child: const Text("PLA")),
+        const SizedBox(height: 10,),
 
-      ElevatedButton(onPressed: () {
-        log.i("LDA");
-        controller.lda();
-      }, child: const Text("LDA")),
-      const SizedBox(height: 10,),
+        ElevatedButton(onPressed: () {
+          log.i("PHA");
+          controller.pha();
+        }, child: const Text("PHA")),
+        const SizedBox(height: 25,),
 
-      ElevatedButton(onPressed: () {
-        log.i("STA");
-        controller.sta();
-      }, child: const Text("STA")),
-      const SizedBox(height: 25,),
+        ElevatedButton(onPressed: () {
+          log.i("LDA");
+          controller.lda();
+        }, child: const Text("LDA")),
+        const SizedBox(height: 10,),
 
-      ElevatedButton(onPressed: () {
-        log.i("ADD");
-        controller.add();
-      }, child: const Text("ADD")),
-      const SizedBox(height: 10,),
+        ElevatedButton(onPressed: () {
+          log.i("STA");
+          controller.sta();
+        }, child: const Text("STA")),
+        const SizedBox(height: 25,),
 
-      ElevatedButton(onPressed: () {
-        log.i("SUB");
-        controller.sub();
-      }, child: const Text("SUB")),
-      const SizedBox(height: 10,),
+        ElevatedButton(onPressed: () {
+          log.i("ADD");
+          controller.add();
+        }, child: const Text("ADD")),
+        const SizedBox(height: 10,),
 
-      ElevatedButton(onPressed: () {
-        log.i("INC");
-        controller.inc();
-      }, child: const Text("INC")),
-      const SizedBox(height: 10,),
+        ElevatedButton(onPressed: () {
+          log.i("SUB");
+          controller.sub();
+        }, child: const Text("SUB")),
+        const SizedBox(height: 10,),
 
-      ElevatedButton(onPressed: () {
-        log.i("DEC");
-        controller.dec();
-      }, child: const Text("DEC")),
-      const SizedBox(height: 25,),
-    ]);
+        ElevatedButton(onPressed: () {
+          log.i("INC");
+          controller.inc();
+        }, child: const Text("INC")),
+        const SizedBox(height: 10,),
+
+        ElevatedButton(onPressed: () {
+          log.i("DEC");
+          controller.dec();
+        }, child: const Text("DEC")),
+        const SizedBox(height: 25,),
+      ])
+    ));
   }
+
+  Widget buildSourceView() {
+    return const Text("源码视图");
+  }
+
+  Widget buildInstWidget(int pc, Instruction inst) {
+    String arrow = (pc == inst.offset) ? ">" : "";
+    return Row(children: [
+      Text(arrow),
+      Text(inst.toString())
+    ],);
+  }
+
+  Widget buildInstListView(RxInt pc, RxList<Instruction> instList) {
+    return Scrollbar(child: ListView(
+      children: instList.map(
+              (inst) => buildInstWidget(pc.value, inst)
+      ).toList(),
+    ));
+  }
+
+  Widget buildVisualView() {
+    return const Text("可视化");
+  }
+
+  // Widget buildTabs() {
+  //   return Scaffold(
+  //     appBar: TabBar(
+  //         tabs: tabs,
+  //       controller: controller.,
+  //     ),
+  //     body: TabBarView(children: [
+  //       buildSourceView(),
+  //       buildVisualView(),
+  //     ]),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -206,20 +244,28 @@ class MachineView extends GetView<MachineController> {
             controller.machine.memory.width,
             controller.machine.memory.height,
             controller.memoryValues,
-            <String, int>{
-              "zero": 15
-            }.obs
+            // <String, int>{
+            //   "zero": 15
+            // }.obs
+            controller.variables
           )
         ])),
         Obx(() => buildQueue("OUTBOX", controller.outboxValues, true)),
-        // buildQueue("OUTBOX", controller.outboxValues, true),
+        buildInstBuilder(),
         Expanded(
-          flex: 10,
-            child: buildDebugger()
-        )
+          flex: 10, child: Row(children: [
+          ]),
+        ),
+        // Row(
+        //   children: [
+        //     Obx( () => buildInstListView(
+        //         controller.pc,
+        //         controller.instList
+        //     )),
+        //     buildVisualView()
+        //   ],
+        // )
       ],)
     );
   }
-
-
 }
