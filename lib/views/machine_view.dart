@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:code_editor/code_editor.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:get/get.dart';
 import 'package:hrvm/widgets/data_module.dart';
 import 'package:logger/logger.dart';
@@ -102,13 +104,13 @@ class MachineView extends GetView<MachineController> {
         rows.add(row);
       }
 
-      return Container(
+      return Center(child: Container(
         padding: const EdgeInsets.all(10),
         color: const Color(0xFF988D97),
         child: SizedBox(width: width * cellSize, height: height * cellSize,
           child: Column(children: rows)
         ),
-      );
+      ));
     }, values);
   }
 
@@ -121,8 +123,8 @@ class MachineView extends GetView<MachineController> {
           child: TextField(
             autofocus: true,
             decoration: const InputDecoration(
-                label: Text("operand"),
-                hintText: "操作数"
+              label: Text("operand"),
+              hintText: "操作数"
             ),
             controller: controller.operandController
           ),
@@ -131,8 +133,8 @@ class MachineView extends GetView<MachineController> {
 
         const Text("间接寻址"),
         Obx(() => Switch(
-            value: controller.useIndirectAddressing.value,
-            onChanged: controller.addrModeChanged
+          value: controller.useIndirectAddressing.value,
+          onChanged: controller.addrModeChanged
         )),
         const SizedBox(height: 25,),
 
@@ -189,12 +191,29 @@ class MachineView extends GetView<MachineController> {
           controller.dec();
         }, child: const Text("DEC")),
         const SizedBox(height: 25,),
+
+        const Text("显示源码"),
+        Obx(() => Switch(
+          value: controller.displaySourceCode.value,
+          onChanged: controller.displaySrcChanged
+        )),
+        const SizedBox(height: 25,),
+
+        ElevatedButton(onPressed: () {
+          log.i("汇编");
+        }, child: const Text("汇编")),
+        const SizedBox(height: 25,),
       ])
     ));
   }
 
   Widget buildSourceView() {
-    return const Text("源码视图");
+    var editor = CodeField(controller: controller.editorController);
+    return Container(
+      alignment: Alignment.topLeft,
+      color: const Color(0xFF212121),
+      child: SingleChildScrollView(child: editor)
+    );
   }
 
   Widget buildInstWidget(int pc, Instruction inst) {
@@ -225,11 +244,14 @@ class MachineView extends GetView<MachineController> {
       body: Row(children: [
         Obx(() => buildQueue("INBOX", controller.inboxValues, false)),
         Expanded(flex: 14, child: Column(children: [
-          SizedBox(
-            width: 100,
-            height: 100,
-            child: ObxValue((acc) => DataModule(acc.value), controller.acc)
-          ),
+          const SizedBox(height: 32),
+          Center(child: SizedBox(width: 256, child: Row(children: [
+            const Text("A = "),
+            ObxValue((acc) => DataModule(acc.value), controller.acc),
+            const SizedBox(width: 64),
+            const Text("PC = "),
+            ObxValue((pc) => DataModule(pc.value), controller.pc),
+          ]))),
           buildMemoryCells(
             controller.machine.memory.width,
             controller.machine.memory.height,
@@ -239,10 +261,14 @@ class MachineView extends GetView<MachineController> {
         ])),
         Obx(() => buildQueue("OUTBOX", controller.outboxValues, true)),
         buildInstBuilder(),
+        // Expanded(
+        //   flex: 10, child: Obx(
+        //         () => buildInstListView(controller.pc, controller.instList)
+        //   )
+        // ),
         Expanded(
-          flex: 10, child: Obx(
-                () => buildInstListView(controller.pc, controller.instList)
-          )
+          flex: 10,
+          child: buildSourceView()
         ),
       ],)
     );

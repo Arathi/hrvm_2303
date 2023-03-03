@@ -1,17 +1,32 @@
+import 'package:code_editor/code_editor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:get/get.dart';
-import 'package:hrvm/core/instruction.dart';
 import 'package:logger/logger.dart';
+import 'package:highlight/languages/x86asm.dart';
 
+import '../core/assembler.dart';
 import '../core/opcode.dart';
 import '../core/program.dart';
 import '../core/queue.dart';
 import '../core/machine.dart';
 import '../core/memory.dart';
 import '../core/task.dart';
+import '../core/instruction.dart';
 
 var log = Logger();
+
+class EditorModelEx extends EditorModel {
+  EditorModelEx({required super.files, super.styleOptions});
+
+  @override
+  void toggleEditing() {
+    super.toggleEditing();
+    log.i("开启编辑模式");
+    // super.notify();
+  }
+}
 
 class MachineController extends GetxController {
   RxList<int> inboxValues = <int>[].obs;
@@ -22,16 +37,34 @@ class MachineController extends GetxController {
   RxMap<String, int> variables = <String, int>{}.obs;
 
   var operandController = TextEditingController(text: "0");
-  // var tabController = TabController(length: 10, vsync: TickerProvider.)
+  var sourceController = TextEditingController(text: "");
+  var editorController = CodeController(
+    text: "",
+    language: x86Asm
+  );
 
   late RxInt pc;
   late Rx<int?> acc;
-  late RxBool useIndirectAddressing = false.obs;
+  RxBool useIndirectAddressing = false.obs;
+  RxBool displaySourceCode = false.obs;
+  RxString sourceCode = "".obs;
+
   AddressingMode addrMode = AddressingMode.absolute;
 
   late Machine machine;
   get processor => machine.processor;
   get program => machine.program;
+
+  Assembler assembler = Assembler();
+
+  EditorModel editorModel = EditorModelEx(
+      files: [],
+      styleOptions: EditorModelStyleOptions(
+          heightOfContainer: Get.height - 50,
+          editButtonName: "编辑",
+          fontSize: 13
+      )
+  );
 
   MachineController([Task? task]) {
     var inbox = (task != null) ?
@@ -85,6 +118,22 @@ class MachineController extends GetxController {
     else {
       addrMode = AddressingMode.absolute;
     }
+  }
+
+  void displaySrcChanged(bool value) {
+    displaySourceCode.value = value;
+    var mode = value ? "源码模式" : "可视化模式";
+    log.i("切换为：$mode");
+    if (value) {
+      editorModel.toggleEditing();
+    }
+  }
+
+  void submitSourceCode(String? language, String? value) {
+    if (value != null) {
+      sourceCode.value = value;
+    }
+    displaySrcChanged(false);
   }
 
   void reloadProgram() {
@@ -163,6 +212,7 @@ class MachineController extends GetxController {
   }
 
   void execute(Instruction inst) {
+    log.i("执行指令：$inst");
     processor.executeInstruction(inst);
     updateObservers();
   }
@@ -175,6 +225,7 @@ class MachineController extends GetxController {
   @override
   void onClose() {
     operandController.dispose();
+    sourceController.dispose();
   }
 }
 

@@ -43,7 +43,7 @@ class Task {
     if (outboxGenerator != null) {
       this.outboxInitValues.clear();
       var generated = outboxGenerator!.call(this.inboxInitValues);
-      this.inboxInitValues.addAll(generated);
+      this.outboxInitValues.addAll(generated);
     }
     else if (outboxInitValues != null) {
       this.outboxInitValues.clear();
@@ -68,7 +68,7 @@ class Task {
         while (inboxIndex < inbox.length) {
           var a = inbox[inboxIndex++];
           var b = inbox[inboxIndex++];
-          if (a != b) {
+          if (a == b) {
             outbox.add(a);
           }
         }
