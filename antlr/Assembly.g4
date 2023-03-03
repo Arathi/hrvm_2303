@@ -1,4 +1,4 @@
-grammar HumanResourceAssembly;
+grammar Assembly;
 
 program
     : line* EOF
@@ -40,11 +40,11 @@ instruction
 /* Macro Instructions */
 
 org
-    : ORG uint
+    : ORG uinteger
     ;
 
 set
-    : SET symbol ',' uint
+    : SET symbol ',' uinteger
     ;
 
 /* Instructions */
@@ -110,17 +110,17 @@ bmi
 /* Addressing Modes */
 
 absoluteAddressing
-    : uint
+    : uinteger
     | symbol
     ;
 
 indirectAddressing
-    : LBRACKET uint RBRACKET
+    : LBRACKET uinteger RBRACKET
     | LBRACKET symbol RBRACKET
     ;
 
 relativeAddressing
-    : int
+    : integer
     | symbol
     ;
 
@@ -130,12 +130,12 @@ symbol
     : NAME
     ;
 
-uint
+uinteger
     : DECIMAL
     | HEXADECIMAL
     ;
 
-int
+integer
     : SIGN? DECIMAL
     | HEXADECIMAL
     ;

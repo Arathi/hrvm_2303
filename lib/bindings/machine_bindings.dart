@@ -11,6 +11,6 @@ class MachineBindings extends Bindings {
     log.i("绑定Machine的依赖");
 
     log.i("正在创建Machine控制器");
-    Get.put(MachineController());
+    Get.put(MachineController.level(13));
   }
 }

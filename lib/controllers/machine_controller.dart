@@ -60,6 +60,8 @@ class MachineController extends GetxController {
     updateObservers();
   }
 
+  MachineController.level(int level) : this(Task.getTaskByLevel(level));
+
   void updateObservers() {
     inboxValues.clear();
     inboxValues.addAll(machine.inbox.values);

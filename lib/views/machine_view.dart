@@ -119,16 +119,17 @@ class MachineView extends GetView<MachineController> {
         Container(
           padding: const EdgeInsets.all(8),
           child: TextField(
-              autofocus: true,
-              decoration: const InputDecoration(
-                  label: Text("operand"),
-                  hintText: "操作数"
-              ),
-              controller: controller.operandController
+            autofocus: true,
+            decoration: const InputDecoration(
+                label: Text("operand"),
+                hintText: "操作数"
+            ),
+            controller: controller.operandController
           ),
         ),
         const SizedBox(height: 10,),
 
+        const Text("间接寻址"),
         Obx(() => Switch(
             value: controller.useIndirectAddressing.value,
             onChanged: controller.addrModeChanged
@@ -205,29 +206,18 @@ class MachineView extends GetView<MachineController> {
   }
 
   Widget buildInstListView(RxInt pc, RxList<Instruction> instList) {
-    return Scrollbar(child: ListView(
+    return Container(
+      color: const Color(0xFFBCA08B),
+      child: Scrollbar(child: ListView(
       children: instList.map(
               (inst) => buildInstWidget(pc.value, inst)
       ).toList(),
-    ));
+    )),);
   }
 
   Widget buildVisualView() {
     return const Text("可视化");
   }
-
-  // Widget buildTabs() {
-  //   return Scaffold(
-  //     appBar: TabBar(
-  //         tabs: tabs,
-  //       controller: controller.,
-  //     ),
-  //     body: TabBarView(children: [
-  //       buildSourceView(),
-  //       buildVisualView(),
-  //     ]),
-  //   );
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -244,27 +234,16 @@ class MachineView extends GetView<MachineController> {
             controller.machine.memory.width,
             controller.machine.memory.height,
             controller.memoryValues,
-            // <String, int>{
-            //   "zero": 15
-            // }.obs
             controller.variables
           )
         ])),
         Obx(() => buildQueue("OUTBOX", controller.outboxValues, true)),
         buildInstBuilder(),
         Expanded(
-          flex: 10, child: Row(children: [
-          ]),
+          flex: 10, child: Obx(
+                () => buildInstListView(controller.pc, controller.instList)
+          )
         ),
-        // Row(
-        //   children: [
-        //     Obx( () => buildInstListView(
-        //         controller.pc,
-        //         controller.instList
-        //     )),
-        //     buildVisualView()
-        //   ],
-        // )
       ],)
     );
   }

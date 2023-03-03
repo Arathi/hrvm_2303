@@ -15,6 +15,7 @@ description
 
 memory
     : ''
+    ;
 
 LEVEL : 'level:' ;
 

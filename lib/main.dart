@@ -3,7 +3,7 @@ import 'machine_app.dart';
 
 void main(List<String> args) {
   if (args.isEmpty || (args.length == 1 && args[0] == "--gui")) {
-    runApp(const MachineApp());  // GetTestApp
+    runApp(const MachineApp());
     return;
   }
 }
